@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - VIBE Energy Drinks</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#0a0a0a',
+                            mango: '#FF8C00',
+                            strawberry: '#FF0080',
+                            apple: '#32CD32',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #050505;
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Glassmorphism Utilities */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-white selection:text-black">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 top-0 left-0 px-6 py-4 bg-black/80 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-black tracking-tighter italic">VIBE<span class="text-orange-500">.</span></a>
+            <button onclick="window.history.back()" class="bg-white text-black px-5 py-2 rounded-full text-sm font-bold hover:scale-105 transition-transform">
+                Back
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <section class="min-h-screen pt-32 pb-16 relative z-10">
+        <div class="container mx-auto px-6 max-w-5xl">
+            <!-- Header -->
+            <div class="mb-12">
+                <h1 class="text-5xl md:text-6xl font-black mb-2">Order <span class="text-orange-500">Your Vibe</span></h1>
+                <p class="text-gray-400 text-lg">Complete your order and place it now</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Order Form -->
+                <div class="md:col-span-2">
+                    <div class="glass-card rounded-3xl p-8">
+                        <form id="orderForm" class="space-y-8">
+                            <!-- Product Info Section -->
+                            <div class="border-b border-white/10 pb-8">
+                                <h2 class="text-2xl font-bold mb-6">Product Details</h2>
+                                <div class="glass-card rounded-xl p-6 mb-6 bg-white/5">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <div>
+                                            <p class="text-gray-400 text-sm">Selected Flavor:</p>
+                                            <p class="text-2xl font-bold" id="productName">Tropical Mango</p>
+                                        </div>
+                                        <div class="text-4xl">
+                                            <span id="productEmoji">🥭</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <p class="text-gray-400">Price per unit:</p>
+                                        <p class="text-xl font-bold text-orange-400">$<span id="unitPrice">29.99</span></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Quantity Section -->
+                            <div class="border-b border-white/10 pb-8">
+                                <h2 class="text-2xl font-bold mb-6">Quantity</h2>
+                                <div class="space-y-4">
+                                    <label class="block text-sm font-medium">Number of Drinks</label>
+                                    <div class="flex items-center gap-4">
+                                        <button type="button" onclick="decreaseQuantity()" class="bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg w-12 h-12 flex items-center justify-center font-bold transition-all text-xl">−</button>
+                                        <input type="number" id="quantity" value="1" min="1" max="100" class="flex-1 px-4 py-3 rounded-lg bg-white/10 border border-white/20 focus:border-orange-500 focus:outline-none transition-colors text-white text-center text-xl font-bold" onchange="updateTotal()">
+                                        <button type="button" onclick="increaseQuantity()" class="bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg w-12 h-12 flex items-center justify-center font-bold transition-all text-xl">+</button>
+                                    </div>
+                                    <p class="text-gray-400 text-sm">You can order between 1 to 100 drinks</p>
+                                </div>
+                            </div>
+
+                            <!-- Delivery Address Section -->
+                            <div class="border-b border-white/10 pb-8">
+                                <h2 class="text-2xl font-bold mb-6">Delivery Address</h2>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Full Address</label>
+                                        <input type="text" id="address" placeholder="Enter your delivery address" required class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 focus:border-orange-500 focus:outline-none transition-colors text-white placeholder-gray-500">
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium mb-2">City</label>
+                                            <input type="text" id="city" placeholder="City" required class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 focus:border-orange-500 focus:outline-none transition-colors text-white placeholder-gray-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium mb-2">Postal Code</label>
+                                            <input type="text" id="postal" placeholder="Postal code" required class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 focus:border-orange-500 focus:outline-none transition-colors text-white placeholder-gray-500">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Phone Number</label>
+                                        <input type="tel" id="phone" placeholder="Your phone number" required class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 focus:border-orange-500 focus:outline-none transition-colors text-white placeholder-gray-500">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Payment Section -->
+                            <div class="pb-8">
+                                <h2 class="text-2xl font-bold mb-6">Payment Method</h2>
+                                
+                                <!-- Payment Method Selection -->
+                                <div class="space-y-4 mb-8">
+                                    <label class="block text-sm font-medium mb-4">Select Payment Method:</label>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <label class="glass-card rounded-xl p-4 cursor-pointer hover:bg-white/10 transition-all border-2 border-white/20 has-checked:border-orange-500" onclick="setPaymentMethod('cod')">
+                                            <input type="radio" name="paymentMethod" value="cod" id="cod" class="mr-2" onchange="updatePaymentForm()">
+                                            <span class="font-bold">💵 Cash on Delivery</span>
+                                        </label>
+                                        <label class="glass-card rounded-xl p-4 cursor-pointer hover:bg-white/10 transition-all border-2 border-white/20" onclick="setPaymentMethod('upi')">
+                                            <input type="radio" name="paymentMethod" value="upi" id="upi" class="mr-2" onchange="updatePaymentForm()">
+                                            <span class="font-bold">📱 UPI Payment</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Cash on Delivery Info -->
+                                <div id="codSection" class="bg-white/5 border border-white/20 rounded-xl p-6 space-y-4">
+                                    <p class="text-gray-400">
+                                        <span class="font-bold">✓</span> Pay with cash when your order arrives
+                                    </p>
+                                    <p class="text-gray-400 text-sm">
+                                        Our delivery partner will collect payment upon delivery. No online transaction required.
+                                    </p>
+                                </div>
+
+                                <!-- UPI Payment Form -->
+                                <div id="upiSection" class="space-y-4 hidden">
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">UPI ID</label>
+                                        <input type="text" id="upiId" placeholder="yourname@upi" class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 focus:border-orange-500 focus:outline-none transition-colors text-white placeholder-gray-500">
+                                    </div>
+                                    <p class="text-gray-400 text-sm">
+                                        You will receive a UPI prompt to complete the payment securely.
+                                    </p>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Order Summary Sidebar -->
+                <div class="md:col-span-1">
+                    <div class="glass-card rounded-3xl p-8 sticky top-24 space-y-6">
+                        <h3 class="text-2xl font-bold">Order Summary</h3>
+                        
+                        <div class="space-y-4 border-b border-white/10 pb-6">
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Product:</span>
+                                <span id="summaryProduct" class="font-bold">Tropical Mango</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Quantity:</span>
+                                <span id="summaryQuantity" class="font-bold">1</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Unit Price:</span>
+                                <span class="font-bold">$<span id="summaryPrice">29.99</span></span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4 border-b border-white/10 pb-6">
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Subtotal:</span>
+                                <span class="font-bold">$<span id="subtotal">29.99</span></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Shipping:</span>
+                                <span class="font-bold">$<span id="shipping">5.00</span></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Tax (10%):</span>
+                                <span class="font-bold">$<span id="tax">3.50</span></span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xl font-bold">Total:</span>
+                                <span class="text-2xl font-black text-orange-400">$<span id="totalPrice">37.99</span></span>
+                            </div>
+                            <button type="submit" form="orderForm" onclick="placeOrder()" class="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-4 rounded-full font-bold text-lg transition-all transform hover:scale-105 shadow-[0_0_30px_rgba(255,140,0,0.4)]">
+                                Place Order
+                            </button>
+                            <button type="button" onclick="window.history.back()" class="w-full border border-white/30 text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white/5 transition-all">
+                                Continue Shopping
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const productName = urlParams.get('product') || 'Tropical Mango';
+        const productPrice = parseFloat(urlParams.get('price')) || 29.99;
+
+        // Product emoji mapping
+        const emojiMap = {
+            'Tropical Mango': '🥭',
+            'Berry Blast': '🍓',
+            'Green Energy': '🍏',
+            'Cosmic Blueberry': '🫐',
+            'Electric Grape': '🍇',
+            'Watermelon Rush': '🍉'
+        };
+
+        // Initialize page
+        function initializePage() {
+            document.getElementById('productName').textContent = productName;
+            document.getElementById('productEmoji').textContent = emojiMap[productName] || '🥭';
+            document.getElementById('unitPrice').textContent = productPrice.toFixed(2);
+            document.getElementById('summaryProduct').textContent = productName;
+            document.getElementById('summaryPrice').textContent = productPrice.toFixed(2);
+            
+            // Set default payment method
+            document.getElementById('cod').checked = true;
+            updatePaymentForm();
+            updateTotal();
+        }
+
+        // Set payment method
+        function setPaymentMethod(method) {
+            document.getElementById(method).checked = true;
+            updatePaymentForm();
+        }
+
+        // Update payment form based on selected method
+        function updatePaymentForm() {
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            const codSection = document.getElementById('codSection');
+            const upiSection = document.getElementById('upiSection');
+
+            if (paymentMethod === 'cod') {
+                codSection.classList.remove('hidden');
+                upiSection.classList.add('hidden');
+            } else {
+                codSection.classList.add('hidden');
+                upiSection.classList.remove('hidden');
+            }
+        }
+
+        // Increase quantity
+        function increaseQuantity() {
+            const quantityInput = document.getElementById('quantity');
+            quantityInput.value = Math.min(parseInt(quantityInput.value) + 1, 100);
+            updateTotal();
+        }
+
+        // Decrease quantity
+        function decreaseQuantity() {
+            const quantityInput = document.getElementById('quantity');
+            quantityInput.value = Math.max(parseInt(quantityInput.value) - 1, 1);
+            updateTotal();
+        }
+
+        // Update total price
+        function updateTotal() {
+            const quantity = parseInt(document.getElementById('quantity').value) || 1;
+            const subtotal = productPrice * quantity;
+            const shipping = 5.00;
+            const tax = subtotal * 0.10;
+            const total = subtotal + shipping + tax;
+
+            document.getElementById('summaryQuantity').textContent = quantity;
+            document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+            document.getElementById('tax').textContent = tax.toFixed(2);
+            document.getElementById('totalPrice').textContent = total.toFixed(2);
+        }
+
+        // Calculate delivery date (3 days from now)
+        function getDeliveryDate() {
+            const today = new Date();
+            const deliveryDate = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000);
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return deliveryDate.toLocaleDateString('en-US', options);
+        }
+
+        // Place order
+        function placeOrder() {
+            const address = document.getElementById('address').value;
+            const city = document.getElementById('city').value;
+            const postal = document.getElementById('postal').value;
+            const phone = document.getElementById('phone').value;
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            const quantity = document.getElementById('quantity').value;
+
+            // Validation
+            if (!address || !city || !postal || !phone) {
+                alert('Please fill in all address fields');
+                return;
+            }
+
+            // Payment method specific validation
+            if (paymentMethod === 'upi') {
+                const upiId = document.getElementById('upiId').value;
+                if (!upiId) {
+                    alert('Please enter your UPI ID');
+                    return;
+                }
+                if (!upiId.includes('@')) {
+                    alert('Please enter a valid UPI ID (e.g., name@upi)');
+                    return;
+                }
+            }
+
+            // Calculate total
+            const subtotal = productPrice * quantity;
+            const shipping = 5.00;
+            const tax = subtotal * 0.10;
+            const total = subtotal + shipping + tax;
+            const deliveryDate = getDeliveryDate();
+
+            // Payment method display
+            let paymentDisplay = '';
+            if (paymentMethod === 'cod') {
+                paymentDisplay = '💵 Cash on Delivery';
+            } else {
+                paymentDisplay = '📱 UPI: ' + document.getElementById('upiId').value;
+            }
+
+            // Create order summary
+            const orderSummary = `
+✅ ORDER CONFIRMATION
+==================
+
+PRODUCT ORDER:
+Product: ${productName}
+Quantity: ${quantity}
+Unit Price: $${productPrice.toFixed(2)}
+
+PRICING BREAKDOWN:
+Subtotal: $${subtotal.toFixed(2)}
+Shipping: $${shipping.toFixed(2)}
+Tax (10%): $${tax.toFixed(2)}
+━━━━━━━━━━━━━━━━
+TOTAL: $${total.toFixed(2)}
+
+DELIVERY INFORMATION:
+📍 Address: ${address}
+   ${city}, ${postal}
+📞 Phone: ${phone}
+
+⏰ ESTIMATED DELIVERY:
+${deliveryDate}
+(3 days from today)
+
+PAYMENT METHOD:
+${paymentDisplay}
+
+━━━━━━━━━━━━━━━━
+Thank you for your order! 
+Your VIBE energy drinks will be delivered soon.
+            `;
+
+            alert(orderSummary);
+            // Here you would normally send the data to a backend
+            // For now, just show confirmation and redirect
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1000);
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', initializePage);
+    </script>
+</body>
+</html>
