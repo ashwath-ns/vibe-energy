@@ -1,0 +1,141 @@
+body {
+    background-color: #050505;
+    color: white;
+    overflow-x: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.light-mode {
+    background-color: #f8fafc;
+    color: #0f172a;
+}
+
+body.light-mode .glass-card {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode .text-gray-400 {
+    color: #475569;
+}
+
+body.light-mode .text-gray-300 {
+    color: #334155;
+}
+
+body.light-mode .bg-white\/5,
+body.light-mode .bg-white\/10 {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+body.light-mode .border-white\/5,
+body.light-mode .border-white\/10,
+body.light-mode .border-white\/20,
+body.light-mode .border-white\/30 {
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode .text-white {
+    color: #0f172a;
+}
+
+body.light-mode input,
+body.light-mode textarea,
+body.light-mode select {
+    color: #0f172a;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-color: rgba(0, 0, 0, 0.2);
+}
+
+body.light-mode input::placeholder,
+body.light-mode textarea::placeholder {
+    color: #64748b;
+}
+
+body.light-mode nav.bg-white\/5 {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode .bg-black\/50 {
+    background-color: #e2e8f0;
+}
+
+body.light-mode .bg-black\/80 {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+body.light-mode input,
+body.light-mode textarea,
+body.light-mode select {
+    color: #0f172a;
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Glassmorphism Utilities */
+.glass-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.tilt-card {
+    transform-style: preserve-3d;
+    transform: perspective(1000px);
+}
+
+.tilt-content {
+    transform: translateZ(50px);
+}
+
+/* Floating Animation */
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-20px);
+    }
+
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+
+/* Canvas positioning */
+#canvas-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+}
