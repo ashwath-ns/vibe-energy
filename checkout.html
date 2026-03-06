@@ -129,10 +129,63 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
+
+        /* Success Modal Animations */
+        @keyframes modalPop {
+            0% {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .animate-modal {
+            animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
     </style>
 </head>
 
 <body class="antialiased selection:bg-white selection:text-black">
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-md"></div>
+        <div class="relative glass-card rounded-3xl p-10 max-w-lg w-full mx-4 border border-white/20 shadow-2xl animate-modal text-center"
+            style="background: rgba(10,10,10,0.95);">
+            <div
+                class="w-20 h-20 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(249,115,22,0.4)]">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h2 class="text-4xl font-black mb-2 italic tracking-tighter uppercase">ORDER PLACED!</h2>
+            <p class="text-orange-400 font-bold mb-6 tracking-widest uppercase text-sm">Thank you for your vibe</p>
+
+            <div class="space-y-4 text-left mb-8 bg-white/5 p-6 rounded-2xl border border-white/10">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-400">Order ID:</span>
+                    <span class="font-bold text-white font-mono" id="modalOrderId">#VIBE-78921</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-400">Product:</span>
+                    <span class="font-bold text-white" id="modalProduct">Tropical Mango</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-400">Estimated Delivery:</span>
+                    <span class="font-bold text-orange-400" id="modalDelivery">3 Days</span>
+                </div>
+            </div>
+
+            <button onclick="window.location.href='index.html'"
+                class="w-full bg-white text-black py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-[0_0_30px_rgba(255,255,255,0.2)]">
+                Return Home
+            </button>
+        </div>
+    </div>
 
     <!-- Navigation -->
     <nav class="fixed w-full z-50 top-0 left-0 px-6 py-4 bg-black/80 backdrop-blur-md">
@@ -462,56 +515,12 @@
                 }
             }
 
-            // Calculate total
+            // Calculate totals
             const subtotal = productPrice * quantity;
             const shipping = 50.00;
             const tax = subtotal * 0.10;
             const total = subtotal + shipping + tax;
             const deliveryDate = getDeliveryDate();
-
-            // Payment method display
-            let paymentDisplay = '';
-            if (paymentMethod === 'cod') {
-                paymentDisplay = '💵 Cash on Delivery';
-            } else {
-                paymentDisplay = '📱 UPI: ' + document.getElementById('upiId').value;
-            }
-
-            // Create order summary
-            const orderSummary = `
-✅ ORDER CONFIRMATION
-==================
-
-PRODUCT ORDER:
-Product: ${productName}
-Quantity: ${quantity}
-Unit Price: ₹${productPrice.toFixed(2)}
-
-PRICING BREAKDOWN:
-Subtotal: ₹${subtotal.toFixed(2)}
-Shipping: ₹${shipping.toFixed(2)}
-Tax (10%): ₹${tax.toFixed(2)}
-━━━━━━━━━━━━━━━━
-TOTAL: ₹${total.toFixed(2)}
-
-DELIVERY INFORMATION:
-📍 Address: ${address}
-   ${city}, ${postal}
-📞 Phone: ${phone}
-
-⏰ ESTIMATED DELIVERY:
-${deliveryDate}
-(3 days from today)
-
-PAYMENT METHOD:
-${paymentDisplay}
-
-━━━━━━━━━━━━━━━━
-Thank you for your order!
-Your VIBE energy drinks will be delivered soon.
-            `;
-
-            alert(orderSummary);
 
             // Send order to backend
             const orderData = {
@@ -530,26 +539,41 @@ Your VIBE energy drinks will be delivered soon.
                 upiId: paymentMethod === 'upi' ? document.getElementById('upiId').value : ''
             };
 
+            const submitBtn = document.querySelector('button[form="orderForm"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Processing...';
+            }
+
             try {
                 const response = await fetch('http://localhost:5005/place-order', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(orderData)
                 });
 
                 const result = await response.json();
 
                 if (result.success) {
-                    alert('Order placed successfully and saved to database!');
-                    window.location.href = 'index.html';
+                    // Update Modal Details
+                    document.getElementById('modalOrderId').textContent = '#' + (result.orderId ? result.orderId.substring(result.orderId.length - 8).toUpperCase() : 'VIBE-ORDER');
+                    document.getElementById('modalProduct').textContent = `${quantity}x ${productName}`;
+                    document.getElementById('modalDelivery').textContent = deliveryDate;
+
+                    // Show success modal
+                    document.getElementById('successModal').classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
                 } else {
                     alert('Failed to save order: ' + result.message);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('An error occurred while placing the order. Please make sure the server is running on port 5005.');
+                alert('An error occurred while placing the order.');
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Place Order';
+                }
             }
         }
 
