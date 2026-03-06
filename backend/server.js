@@ -20,11 +20,12 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/vibe_ener
 
 // ─── User Schema ────────────────────────────────────────────────
 const userSchema = new mongoose.Schema({
-    phone: { type: String, required: true, unique: true },
-    password: { type: String },
-    otp: { type: String },
-    otpExpiry: { type: Date },
-    verified: { type: Boolean, default: false },
+    email: { type: String, sparse: true, unique: true },
+    phone: { type: String, sparse: true, unique: true },
+    password: { type: String, required: true },
+    otp: { type: String }, // deprecated
+    otpExpiry: { type: Date }, // deprecated
+    verified: { type: Boolean, default: false }, // deprecated
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -106,20 +107,30 @@ app.post('/verify-otp', async (req, res) => {
 // ─── AUTH: Register ─────────────────────────────────────────────
 app.post('/register', async (req, res) => {
     try {
-        const { phone, password } = req.body;
+        const { email, phone, password } = req.body;
 
-        if (!phone || !password) return res.status(400).json({ success: false, message: 'Phone and password required' });
-        if (password.length < 6) return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+        if ((!email && !phone) || !password) {
+            return res.status(400).json({ success: false, message: 'Email/Phone and password required' });
+        }
+        if (password.length < 6) {
+            return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+        }
 
-        const user = await User.findOne({ phone });
-        if (!user || !user.verified) return res.status(400).json({ success: false, message: 'Phone not verified. Please complete OTP verification first.' });
-        if (user.password) return res.status(400).json({ success: false, message: 'Account already exists. Please login.' });
+        // Check if user already exists
+        let existingUser = null;
+        if (email) existingUser = await User.findOne({ email });
+        if (!existingUser && phone) existingUser = await User.findOne({ phone });
+
+        if (existingUser) {
+            return res.status(400).json({ success: false, message: 'Account already exists. Please login.' });
+        }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        await User.findOneAndUpdate({ phone }, { password: hashedPassword });
+        const newUser = new User({ email, phone, password: hashedPassword, verified: true });
+        await newUser.save();
 
-        const token = jwt.sign({ phone }, JWT_SECRET, { expiresIn: '7d' });
-        res.status(201).json({ success: true, message: 'Account created successfully!', token, phone });
+        const token = jwt.sign({ id: newUser._id, phone: newUser.phone, email: newUser.email }, JWT_SECRET, { expiresIn: '7d' });
+        res.status(201).json({ success: true, message: 'Account created successfully!', token, phone: newUser.phone, email: newUser.email });
     } catch (error) {
         console.error('Register error:', error);
         res.status(500).json({ success: false, message: 'Registration failed' });
@@ -129,18 +140,31 @@ app.post('/register', async (req, res) => {
 // ─── AUTH: Login ────────────────────────────────────────────────
 app.post('/login', async (req, res) => {
     try {
-        const { phone, password } = req.body;
+        const { identifier, password } = req.body;
 
-        if (!phone || !password) return res.status(400).json({ success: false, message: 'Phone and password required' });
+        if (!identifier || !password) {
+            return res.status(400).json({ success: false, message: 'Identifier and password required' });
+        }
 
-        const user = await User.findOne({ phone });
-        if (!user || !user.password) return res.status(404).json({ success: false, message: 'No account found. Please register.' });
+        // Search by email OR phone
+        const user = await User.findOne({
+            $or: [
+                { email: identifier },
+                { phone: identifier }
+            ]
+        });
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'No account found. Please register.' });
+        }
 
         const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(401).json({ success: false, message: 'Incorrect password' });
+        if (!isMatch) {
+            return res.status(401).json({ success: false, message: 'Incorrect password' });
+        }
 
-        const token = jwt.sign({ phone }, JWT_SECRET, { expiresIn: '7d' });
-        res.status(200).json({ success: true, message: 'Logged in successfully!', token, phone });
+        const token = jwt.sign({ id: user._id, phone: user.phone, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+        res.status(200).json({ success: true, message: 'Logged in successfully!', token, phone: user.phone, email: user.email });
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ success: false, message: 'Login failed' });

@@ -22,11 +22,12 @@
     <!-- Main Styles -->
     <link rel="stylesheet" href="style.css">
 
-    <!-- Firebase SDK (modular) -->
+
+    <!-- Firebase SDK (modular) - Minimal for potential expansion, but removing phone auth specifics -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-analytics.js";
-        import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+        // import { getAuth } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBzJqkguE1bxFZg8OzcY7CblR-hqExkWh0",
@@ -40,12 +41,7 @@
 
         const app = initializeApp(firebaseConfig);
         const analytics = getAnalytics(app);
-        const auth = getAuth(app);
-
-        // Expose to non-module main.js
-        window.fbAuth = auth;
-        window.FirebaseRecaptchaVerifier = RecaptchaVerifier;
-        window.firebaseSignInWithPhoneNumber = signInWithPhoneNumber;
+        // const auth = getAuth(app);
     </script>
 
     <!-- Tailwind Config + JS -->
@@ -118,8 +114,8 @@
                     <h2 class="text-2xl font-black mb-6">Welcome back 👋</h2>
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm text-gray-400 mb-1">Phone Number</label>
-                            <input id="login-phone" type="tel" placeholder="Enter your phone number"
+                            <label class="block text-sm text-gray-400 mb-1">Phone or Email</label>
+                            <input id="login-identifier" type="text" placeholder="Enter phone or email"
                                 class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 focus:border-orange-500 focus:outline-none text-white placeholder-gray-500 transition-colors">
                         </div>
                         <div>
@@ -139,69 +135,36 @@
                     </p>
                 </div>
 
-                <!-- Register Form (3 steps) -->
+                <!-- Register Form -->
                 <div id="form-register" class="hidden">
-                    <!-- Step 1: Phone -->
-                    <div id="reg-step-1">
-                        <h2 class="text-2xl font-black mb-2">Create Account 🚀</h2>
-                        <p class="text-gray-400 text-sm mb-6">Enter your phone number to get an OTP</p>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm text-gray-400 mb-1">Phone Number</label>
-                                <input id="reg-phone" type="tel" placeholder="+91 XXXXX XXXXX"
-                                    class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 focus:border-orange-500 focus:outline-none text-white placeholder-gray-500 transition-colors">
-                            </div>
-                            <p id="reg-error-1" class="text-red-400 text-sm hidden"></p>
-                            <button onclick="sendOtp()"
-                                class="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-3 rounded-full font-bold transition-all transform hover:scale-105">
-                                Send OTP
-                            </button>
+                    <h2 class="text-2xl font-black mb-2">Create Account 🚀</h2>
+                    <p class="text-gray-400 text-sm mb-6">Join the VIBE community today</p>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">Email Address (Optional)</label>
+                            <input id="reg-email" type="email" placeholder="example@vibe.com"
+                                class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 focus:border-orange-500 focus:outline-none text-white placeholder-gray-500 transition-colors">
                         </div>
-                    </div>
-
-                    <!-- Step 2: OTP -->
-                    <div id="reg-step-2" class="hidden">
-                        <h2 class="text-2xl font-black mb-2">Enter OTP 🔐</h2>
-                        <p class="text-gray-400 text-sm mb-6" id="otp-sent-msg">OTP sent to your phone</p>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm text-gray-400 mb-1">6-Digit OTP</label>
-                                <input id="reg-otp" type="number" placeholder="Enter OTP"
-                                    class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 focus:border-orange-500 focus:outline-none text-white placeholder-gray-500 transition-colors text-center text-2xl tracking-widest">
-                            </div>
-                            <p id="reg-error-2" class="text-red-400 text-sm hidden"></p>
-                            <button onclick="verifyOtp()"
-                                class="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-3 rounded-full font-bold transition-all transform hover:scale-105">
-                                Verify OTP
-                            </button>
-                            <button onclick="sendOtp()"
-                                class="w-full border border-white/20 text-gray-400 hover:text-white py-2 rounded-full text-sm transition-colors">
-                                Resend OTP
-                            </button>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">Phone Number</label>
+                            <input id="reg-phone" type="tel" placeholder="+91 XXXXX XXXXX"
+                                class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 focus:border-orange-500 focus:outline-none text-white placeholder-gray-500 transition-colors">
                         </div>
-                    </div>
-
-                    <!-- Step 3: Password -->
-                    <div id="reg-step-3" class="hidden">
-                        <h2 class="text-2xl font-black mb-2">Set Password 🔒</h2>
-                        <p class="text-gray-400 text-sm mb-6">Choose a strong password for your account</p>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm text-gray-400 mb-1">Password</label>
-                                <input id="reg-password" type="password" placeholder="At least 6 characters"
-                                    class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 focus:border-orange-500 focus:outline-none text-white placeholder-gray-500 transition-colors">
-                            </div>
-                            <div>
-                                <label class="block text-sm text-gray-400 mb-1">Confirm Password</label>
-                                <input id="reg-password-confirm" type="password" placeholder="Repeat password"
-                                    class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 focus:border-orange-500 focus:outline-none text-white placeholder-gray-500 transition-colors">
-                            </div>
-                            <p id="reg-error-3" class="text-red-400 text-sm hidden"></p>
-                            <button onclick="handleRegister()"
-                                class="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-3 rounded-full font-bold transition-all transform hover:scale-105">
-                                Create Account
-                            </button>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">Password</label>
+                            <input id="reg-password" type="password" placeholder="At least 6 characters"
+                                class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 focus:border-orange-500 focus:outline-none text-white placeholder-gray-500 transition-colors">
                         </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">Confirm Password</label>
+                            <input id="reg-password-confirm" type="password" placeholder="Repeat password"
+                                class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 focus:border-orange-500 focus:outline-none text-white placeholder-gray-500 transition-colors">
+                        </div>
+                        <p id="reg-error" class="text-red-400 text-sm hidden"></p>
+                        <button onclick="handleRegister()"
+                            class="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-3 rounded-full font-bold transition-all transform hover:scale-105 mt-2">
+                            Create Account
+                        </button>
                     </div>
                 </div>
             </div>

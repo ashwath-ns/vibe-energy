@@ -157,24 +157,26 @@ function getToken() { return localStorage.getItem('vibe_token'); }
 function getPhone() { return localStorage.getItem('vibe_phone'); }
 function isLoggedIn() { return !!getToken(); }
 
-function setSession(token, phone) {
+function setSession(token, phone, email) {
     localStorage.setItem('vibe_token', token);
-    localStorage.setItem('vibe_phone', phone);
+    localStorage.setItem('vibe_phone', phone || '');
+    localStorage.setItem('vibe_email', email || '');
     updateNavAuth();
 }
 
 function clearSession() {
     localStorage.removeItem('vibe_token');
     localStorage.removeItem('vibe_phone');
+    localStorage.removeItem('vibe_email');
     updateNavAuth();
 }
 
 function updateNavAuth() {
     const area = document.getElementById('auth-nav-area');
+    const identifier = localStorage.getItem('vibe_email') || localStorage.getItem('vibe_phone');
     if (isLoggedIn()) {
         area.innerHTML = `
             <div class="flex items-center gap-3">
-                <span class="text-sm text-gray-300 hidden md:inline">📱 ${getPhone()}</span>
                 <button onclick="handleLogout()"
                     class="border border-white/30 text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-white/10 transition-all">
                     Logout
@@ -197,11 +199,6 @@ function openAuthModal() {
 function closeAuthModal() {
     document.getElementById('auth-modal').classList.add('hidden');
     document.body.style.overflow = '';
-    // Reset reCAPTCHA so it can be used again on next open
-    if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-        window.recaptchaVerifier = null;
-    }
 }
 
 function switchAuthTab(tab) {
@@ -219,111 +216,58 @@ function showError(id, msg) {
     setTimeout(() => el.classList.add('hidden'), 5000);
 }
 
-// ── Step 1: Send OTP via Firebase ──────────────────────────────────────────
-async function sendOtp() {
-    let phone = document.getElementById('reg-phone').value.trim();
-    if (!phone || phone.length < 10) {
-        showError('reg-error-1', 'Enter a valid phone number (e.g. +919876543210)');
-        return;
-    }
-    // Ensure E.164 format (+91XXXXXXXXXX for India)
-    if (!phone.startsWith('+')) phone = '+91' + phone.replace(/^0/, '');
-
-    // Create / reset invisible reCAPTCHA verifier
-    if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-        window.recaptchaVerifier = null;
-    }
-    window.recaptchaVerifier = new window.FirebaseRecaptchaVerifier(
-        window.fbAuth,
-        'recaptcha-container',
-        { size: 'invisible', callback: () => { } }
-    );
-
-    const sendBtn = document.querySelector('#reg-step-1 button[onclick="sendOtp()"]');
-    if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = 'Sending…'; }
-
-    try {
-        confirmationResult = await window.firebaseSignInWithPhoneNumber(window.fbAuth, phone, window.recaptchaVerifier);
-        document.getElementById('otp-sent-msg').textContent = `OTP sent to ${phone}`;
-        document.getElementById('reg-step-1').classList.add('hidden');
-        document.getElementById('reg-step-2').classList.remove('hidden');
-    } catch (err) {
-        console.error('Firebase sendOtp error:', err);
-        showError('reg-error-1', err.message || 'Failed to send OTP. Check your Firebase config.');
-        if (window.recaptchaVerifier) {
-            window.recaptchaVerifier.clear();
-            window.recaptchaVerifier = null;
-        }
-    } finally {
-        if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = 'Send OTP'; }
-    }
-}
-
-// ── Step 2: Verify OTP via Firebase ──────────────────────────────────────────
-async function verifyOtp() {
-    const otp = document.getElementById('reg-otp').value.trim();
-    if (!otp || otp.length !== 6) { showError('reg-error-2', 'Please enter the 6-digit OTP'); return; }
-    if (!confirmationResult) { showError('reg-error-2', 'Please request an OTP first.'); return; }
-
-    const verifyBtn = document.querySelector('#reg-step-2 button[onclick="verifyOtp()"]');
-    if (verifyBtn) { verifyBtn.disabled = true; verifyBtn.textContent = 'Verifying…'; }
-
-    try {
-        await confirmationResult.confirm(otp);
-        // OTP verified by Firebase ✔
-        document.getElementById('reg-step-2').classList.add('hidden');
-        document.getElementById('reg-step-3').classList.remove('hidden');
-    } catch (err) {
-        console.error('Firebase verifyOtp error:', err);
-        showError('reg-error-2', 'Invalid OTP. Please try again.');
-    } finally {
-        if (verifyBtn) { verifyBtn.disabled = false; verifyBtn.textContent = 'Verify OTP'; }
-    }
-}
-
-// ── Step 3: Set password and register account ─────────────────────────────
+// ── Register account ─────────────────────────────
 async function handleRegister() {
+    const email = document.getElementById('reg-email').value.trim();
     const phone = document.getElementById('reg-phone').value.trim();
     const password = document.getElementById('reg-password').value;
     const confirm = document.getElementById('reg-password-confirm').value;
 
-    if (password.length < 6) { showError('reg-error-3', 'Password must be at least 6 characters'); return; }
-    if (password !== confirm) { showError('reg-error-3', 'Passwords do not match'); return; }
+    if (!email && !phone) { showError('reg-error', 'Please provide either an email or phone number'); return; }
+    if (password.length < 6) { showError('reg-error', 'Password must be at least 6 characters'); return; }
+    if (password !== confirm) { showError('reg-error', 'Passwords do not match'); return; }
+
+    const regBtn = document.querySelector('#form-register button[onclick="handleRegister()"]');
+    if (regBtn) { regBtn.disabled = true; regBtn.textContent = 'Creating Account...'; }
 
     try {
         const res = await fetch(`${API}/register`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone, password })
+            body: JSON.stringify({ email, phone, password })
         });
         const data = await res.json();
         if (data.success) {
-            setSession(data.token, data.phone);
+            setSession(data.token, data.phone, data.email);
             closeAuthModal();
             alert('🎉 Account created! You are now logged in.');
         } else {
-            showError('reg-error-3', data.message);
+            showError('reg-error', data.message);
         }
     } catch (e) {
-        showError('reg-error-3', 'Could not connect to server.');
+        showError('reg-error', 'Could not connect to server.');
+    } finally {
+        if (regBtn) { regBtn.disabled = false; regBtn.textContent = 'Create Account'; }
     }
 }
 
-// ── Login (phone + password via existing backend) ────────────────────────────
+// ── Login (identifier + password via backend) ────────────────────────────
 async function handleLogin() {
-    const phone = document.getElementById('login-phone').value.trim();
+    const identifier = document.getElementById('login-identifier').value.trim();
     const password = document.getElementById('login-password').value;
 
-    if (!phone || !password) { showError('login-error', 'Please fill in all fields'); return; }
+    if (!identifier || !password) { showError('login-error', 'Please fill in all fields'); return; }
+
+    const loginBtn = document.querySelector('#form-login button[onclick="handleLogin()"]');
+    if (loginBtn) { loginBtn.disabled = true; loginBtn.textContent = 'Logging in...'; }
 
     try {
         const res = await fetch(`${API}/login`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone, password })
+            body: JSON.stringify({ identifier, password })
         });
         const data = await res.json();
         if (data.success) {
-            setSession(data.token, data.phone);
+            setSession(data.token, data.phone, data.email);
             closeAuthModal();
             alert('✅ Logged in successfully! Welcome back.');
         } else {
@@ -331,12 +275,13 @@ async function handleLogin() {
         }
     } catch (e) {
         showError('login-error', 'Could not connect to server. Make sure it is running.');
+    } finally {
+        if (loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Login'; }
     }
 }
 
 function handleLogout() {
     clearSession();
-    window.fbAuth?.signOut().catch(() => { });
     alert('You have been logged out.');
 }
 
